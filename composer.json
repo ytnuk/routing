@@ -1,0 +1,12 @@
+{
+    "name": "webedit/routing",
+    "require": {
+        "webedit/bootstrap": "dev-master",
+        "nette/application": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "WebEdit\\": "src/"
+        }
+    }
+}
