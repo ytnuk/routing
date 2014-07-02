@@ -24,7 +24,7 @@ final class Extension extends Bootstrap\Extension {
         }
         $routes += $config['routes'];
         foreach ($routes as $mask => $metadata) {
-            $router->addSetup('$service[] = new \WebEdit\Routing\Route(?, ?)', [$mask, $metadata]);
+            $router->addSetup('$service[] = new ' . Route::class . '(?, ?)', [$mask, $metadata]);
         }
     }
 
