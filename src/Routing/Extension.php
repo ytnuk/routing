@@ -3,28 +3,40 @@
 namespace WebEdit\Routing;
 
 use WebEdit\Bootstrap;
-use WebEdit\Routing\Route;
+use WebEdit\Routing;
 
 final class Extension extends Bootstrap\Extension {
 
-    private $defaults = [
-        'routes' => []
+    private $resources = [
+        'routes' => [
+            '[<locale [a-z]{2}(_[A-Z]{2})?>/]<module [a-z.]+>[/<action [a-z]+>][/<id [0-9]+>]' => [
+                'module' => 'Home:Front',
+                'presenter' => 'Presenter',
+                'action' => 'view'
+            ]
+        ]
     ];
 
     public function beforeCompile() {
-        $builder = $this->getContainerBuilder();
-        $config = $this->getConfig($this->defaults);
-        $router = $builder->getDefinition('router');
-        $routes = [];
+        $this->loadResources();
+        $this->setupRoutes();
+    }
+
+    private function loadResources() {
+        $this->resources = $this->getConfig($this->resources);
         foreach ($this->compiler->getExtensions() as $extension) {
-            if (!$extension instanceof Route\Provider) {
+            if (!$extension instanceof Routing\Provider) {
                 continue;
             }
-            $routes += $extension->getRoutingRoutes();
+            $this->resources = array_merge_recursive($this->resources, $extension->getRoutingResources());
         }
-        $routes += $config['routes'];
-        foreach ($routes as $mask => $metadata) {
-            $router->addSetup('$service[] = new ' . Route::class . '(?, ?)', [$mask, $metadata]);
+    }
+
+    private function setupRoutes() {
+        $builder = $this->getContainerBuilder();
+        $router = $builder->getDefinition('router');
+        foreach (array_reverse($this->resources['routes']) as $mask => $metadata) {
+            $router->addSetup('$service[] = new ' . Routing\Route::class . '(?, ?)', [$mask, $metadata]);
         }
     }
 
