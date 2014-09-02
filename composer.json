@@ -1,5 +1,9 @@
 {
     "name": "webedit/routing",
+    "type": "webedit-module",
+    "extra": {
+        "extension": "WebEdit\\Routing\\Extension"
+    },
     "require": {
         "webedit/bootstrap": "dev-master",
         "nette/application": "dev-master"
