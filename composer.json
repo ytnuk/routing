@@ -2,7 +2,9 @@
     "name": "webedit/routing",
     "type": "webedit-module",
     "extra": {
-        "extension": "WebEdit\\Routing\\Extension"
+        "extensions": {
+            "routing": "WebEdit\\Routing\\Extension"
+        }
     },
     "require": {
         "webedit/bootstrap": "dev-master",
