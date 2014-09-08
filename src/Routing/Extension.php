@@ -2,10 +2,10 @@
 
 namespace WebEdit\Routing;
 
-use WebEdit\Bootstrap;
+use WebEdit\Module;
 use WebEdit\Routing;
 
-final class Extension extends Bootstrap\Extension implements Routing\Provider {
+final class Extension extends Module\Extension implements Routing\Provider {
 
     public function beforeCompile() {
         $this->setupRoutes();
