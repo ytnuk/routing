@@ -2,7 +2,8 @@
 
 namespace WebEdit\Routing;
 
-interface Provider {
+interface Provider
+{
 
     public function getRoutingResources();
 }

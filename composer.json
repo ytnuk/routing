@@ -8,7 +8,7 @@
     },
     "require": {
         "webedit/module": "dev-master",
-        "nette/application": "dev-master"
+        "webedit/application": "dev-master"
     },
     "autoload": {
         "psr-4": {

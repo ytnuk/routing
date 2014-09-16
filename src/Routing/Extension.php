@@ -2,26 +2,30 @@
 
 namespace WebEdit\Routing;
 
+use WebEdit\Application;
 use WebEdit\Module;
 use WebEdit\Routing;
 
-final class Extension extends Module\Extension implements Routing\Provider {
+final class Extension extends Module\Extension implements Application\Provider
+{
 
-    public function beforeCompile() {
-        $this->setupRoutes();
-    }
+    protected $resources = [
+        'routes' => []
+    ];
 
-    private function setupRoutes() {
-        $builder = $this->getContainerBuilder();
-        $router = $builder->getDefinition('router');
+    public function getApplicationResources()
+    {
+        $setup = [];
         foreach (array_reverse($this->resources['routes']) as $mask => $metadata) {
-            $router->addSetup('$service[] = new ' . Routing\Route::class . '(?, ?)', [$mask, $metadata]);
+            $setup['addRoute'] = [$mask, $metadata];
         }
-    }
-
-    public function getRoutingResources() {
         return [
-            'routes' => []
+            'services' => [
+                [
+                    'class' => Routing\Route\Collection::class,
+                    'setup' => $setup
+                ]
+            ]
         ];
     }
 
