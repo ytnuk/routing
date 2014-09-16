@@ -13,18 +13,19 @@ final class Extension extends Module\Extension implements Application\Provider
         'routes' => []
     ];
 
+    public function beforeCompile()
+    {
+        $collection = $this->getContainerBuilder()->getDefinition($this->prefix('route.collection'));
+        foreach (array_reverse($this->resources['routes']) as $mask => $metadata) {
+            $collection->addSetup('addRoute', [$mask, $metadata]);
+        }
+    }
+
     public function getApplicationResources()
     {
-        $setup = [];
-        foreach (array_reverse($this->resources['routes']) as $mask => $metadata) {
-            $setup['addRoute'] = [$mask, $metadata];
-        }
         return [
             'services' => [
-                [
-                    'class' => Routing\Route\Collection::class,
-                    'setup' => $setup
-                ]
+                $this->prefix('route.collection') => Routing\Route\Collection::class
             ]
         ];
     }
