@@ -9,23 +9,23 @@ use WebEdit\Routing;
 final class Extension extends Module\Extension implements Application\Provider
 {
 
-    protected $resources = [
-        'routes' => []
-    ];
-
-    public function beforeCompile()
+    public function getResources()
     {
-        $collection = $this->getContainerBuilder()->getDefinition($this->prefix('route.collection'));
-        foreach (array_reverse($this->resources['routes']) as $mask => $metadata) {
-            $collection->addSetup('addRoute', [$mask, $metadata]);
-        }
+        return [
+            'routes' => []
+        ];
     }
 
     public function getApplicationResources()
     {
         return [
             'services' => [
-                $this->prefix('route.collection') => Routing\Route\Collection::class
+                [
+                    'class' => Routing\Route\Collection::class,
+                    'setup' => [
+                        'addRoutes' => [$this['routes']]
+                    ]
+                ]
             ]
         ];
     }
