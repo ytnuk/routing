@@ -60,20 +60,22 @@ final class Collection extends Application\Routers\RouteList
 
     public function translateInModule($value)
     {
-        $moduleKey = '.presenter.module'; //TODO: match at end of string
+        $moduleKey = '.module'; //TODO: match at end of string
         $messages = $this->getMessages();
         $modules = array_filter(array_keys($messages), function ($key) use ($moduleKey) {
             return strpos($key, $moduleKey) !== FALSE;
         });
+        $moduleKey = $value;
         foreach ($modules as $key) {
             if (Utils\Strings::webalize($messages[$key]) === $value) {
-                $value = $key;
+                $moduleKey = $key;
                 break;
             }
         }
-        $module = explode('.', $value);
-        array_pop($module);
-        array_pop($module);
+        $module = explode('.', $moduleKey);
+        if ($moduleKey !== $value) {
+            array_pop($module);
+        }
         $module = array_map(function ($value) {
             return ucfirst($value);
         }, $module);
@@ -106,7 +108,14 @@ final class Collection extends Application\Routers\RouteList
 
     public function translateOutModule($value)
     {
-        return Utils\Strings::webalize($this->translator->translate(str_replace(':', '.', strtolower($value)) . '.presenter.module'));
+        $value = str_replace(':', '.', strtolower($value));
+        $moduleKey = $value . '.module';
+        $translated = $this->translator->translate($moduleKey);
+        if ($translated !== $moduleKey) {
+            return Utils\Strings::webalize($translated);
+        } else {
+            return $value;
+        }
     }
 
     public function translateIn($value)
