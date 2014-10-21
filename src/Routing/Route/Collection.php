@@ -55,31 +55,31 @@ final class Collection extends Application\Routers\RouteList
 
     public function translateOutLocale($value)
     {
+        $this->translator->setLocale($value);
         return $value;
     }
 
     public function translateInModule($value)
     {
-        $moduleKey = '.module'; //TODO: match at end of string
         $messages = $this->getMessages();
-        $modules = array_filter(array_keys($messages), function ($key) use ($moduleKey) {
-            return strpos($key, $moduleKey) !== FALSE;
+        $modulesKeys = array_filter(array_keys($messages), function ($key) {
+            return strpos($key, '.module') === strlen($key) - strlen('.module');
         });
-        $moduleKey = $value;
-        foreach ($modules as $key) {
-            if (Utils\Strings::webalize($messages[$key]) === $value) {
-                $moduleKey = $key;
-                break;
+        $result = [];
+        foreach (explode('.', $value) as $part) {
+            foreach ($modulesKeys as $key) {
+                if (Utils\Strings::webalize($messages[$key]) === $part) {
+                    $part = explode('.', $key);
+                    array_pop($part);
+                    $part = end($part);
+                    break;
+                }
             }
+            $result[] = $part;
         }
-        $module = explode('.', $moduleKey);
-        if ($moduleKey !== $value) {
-            array_pop($module);
-        }
-        $module = array_map(function ($value) {
+        return implode(':', array_map(function ($value) {
             return ucfirst($value);
-        }, $module);
-        return implode(':', $module);
+        }, $result));
     }
 
     public function getMessages()
@@ -106,16 +106,27 @@ final class Collection extends Application\Routers\RouteList
         return $data;
     }
 
+
     public function translateOutModule($value)
     {
-        $value = str_replace(':', '.', strtolower($value));
-        $moduleKey = $value . '.module';
-        $translated = $this->translator->translate($moduleKey);
-        if ($translated !== $moduleKey) {
-            return Utils\Strings::webalize($translated);
-        } else {
-            return $value;
+        $parts = explode(':', strtolower($value));
+        $base = [];
+        $result = [];
+        foreach ($parts as $part) {
+            $base[] = $part;
+            $moduleKey = implode('.', $base) . '.module';
+            $translated = $this->translator->translate($moduleKey);
+            if ($moduleKey === $translated) {
+                $moduleKey = $part . '.module';
+                $translated = $this->translator->translate($moduleKey);
+            }
+            if ($translated !== $moduleKey) {
+                $result[] = Utils\Strings::webalize($translated);
+            } else {
+                $result[] = $part;
+            }
         }
+        return implode('.', $result);
     }
 
     public function translateIn($value)
