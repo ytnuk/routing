@@ -12,7 +12,7 @@ final class Collection extends Application\Routers\RouteList
 {
 
     private $translator;
-    private $messages;
+    private $messages = [];
     private $request;
 
     public function __construct(Translation\Translator $translator, Http\Request $request)
@@ -40,33 +40,27 @@ final class Collection extends Application\Routers\RouteList
                         Routing\Route::VALUE => $data,
                     ];
                 }
-                $data[Routing\Route::FILTER_IN] = [$this, 'translateIn' . ucfirst($column)];
-                $data[Routing\Route::FILTER_OUT] = [$this, 'translateOut' . ucfirst($column)];
+                $data[Routing\Route::WAY_IN] = [$this, 'translateIn' . ucfirst($column)];
+                $data[Routing\Route::WAY_OUT] = [$this, 'translateOut' . ucfirst($column)];
+                $data[Routing\Route::FILTER_IN] = NULL;
+                $data[Routing\Route::FILTER_OUT] = NULL;
             }
         }
         $this[] = new Routing\Route($mask, $metadata);
     }
 
-    public function translateInLocale($value)
+    public function translateInModule($value, $request)
     {
-        $this->translator->setLocale($value);
-        return $value;
-    }
-
-    public function translateOutLocale($value)
-    {
-        $this->translator->setLocale($value);
-        return $value;
-    }
-
-    public function translateInModule($value)
-    {
-        $messages = $this->getMessages();
+        $messages = $this->getMessages($request->parameters['locale']);
         $modulesKeys = array_filter(array_keys($messages), function ($key) {
             return strpos($key, '.module') === strlen($key) - strlen('.module');
         });
         $result = [];
         foreach (explode('.', $value) as $part) {
+            if (isset($messages[implode('.', array_merge($result, [$part])) . '.module'])) {
+                $result[] = $part;
+                continue;
+            }
             foreach ($modulesKeys as $key) {
                 if (Utils\Strings::webalize($messages[$key]) === $part) {
                     $part = explode('.', $key);
@@ -82,12 +76,12 @@ final class Collection extends Application\Routers\RouteList
         }, $result));
     }
 
-    public function getMessages()
+    public function getMessages($locale)
     {
-        if (!$this->messages) {
-            $this->messages = $this->prepareValues($this->translator->getMessages(), '.');
+        if (!isset($this->messages[$locale])) {
+            $this->messages[$locale] = $this->prepareValues($this->translator->getMessages($locale), '.');
         }
-        return $this->messages;
+        return $this->messages[$locale];
     }
 
     private function prepareValues($values, $separator = '->', $prefix = NULL)
@@ -107,7 +101,7 @@ final class Collection extends Application\Routers\RouteList
     }
 
 
-    public function translateOutModule($value)
+    public function translateOutModule($value, $request)
     {
         $parts = explode(':', strtolower($value));
         $base = [];
@@ -166,5 +160,15 @@ final class Collection extends Application\Routers\RouteList
             $value['action'] = $key;
         }
         return $value;
+    }
+
+    public function translateInAction($action, $request)
+    {
+        return $action;
+    }
+
+    public function translateOutAction($action, $request)
+    {
+        return $action;
     }
 }
