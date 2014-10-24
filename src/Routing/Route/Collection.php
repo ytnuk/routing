@@ -32,18 +32,19 @@ final class Collection extends Application\Routers\RouteList
     {
         if (is_array($metadata)) {
             foreach ($metadata as $column => &$data) {
-                if (!isset($data[Routing\Route::TRANSLATE])) {
-                    continue;
-                }
                 if (!is_array($data)) {
                     $data = [
                         Routing\Route::VALUE => $data,
                     ];
                 }
-                $data[Routing\Route::WAY_IN] = [$this, 'translateIn' . ucfirst($column)];
-                $data[Routing\Route::WAY_OUT] = [$this, 'translateOut' . ucfirst($column)];
-                $data[Routing\Route::FILTER_IN] = NULL;
-                $data[Routing\Route::FILTER_OUT] = NULL;
+                $in = Routing\Route::TRANSLATE_IN . ucfirst($column);
+                if (method_exists($this, $in)) {
+                    $data[Routing\Route::TRANSLATE_IN] = [$this, $in];
+                }
+                $out = Routing\Route::TRANSLATE_OUT . ucfirst($column);
+                if (method_exists($this, $out)) {
+                    $data[Routing\Route::TRANSLATE_OUT] = [$this, $out];
+                }
             }
         }
         $this[] = new Routing\Route($mask, $metadata);
@@ -62,7 +63,7 @@ final class Collection extends Application\Routers\RouteList
                 continue;
             }
             foreach ($modulesKeys as $key) {
-                if (Utils\Strings::webalize($messages[$key]) === $part) {
+                if (Utils\Strings::webalize($messages[$key]) === Utils\Strings::webalize($part)) {
                     $part = explode('.', $key);
                     array_pop($part);
                     $part = end($part);
@@ -71,9 +72,11 @@ final class Collection extends Application\Routers\RouteList
             }
             $result[] = $part;
         }
-        return implode(':', array_map(function ($value) {
+        $module = implode(':', array_map(function ($value) {
             return ucfirst($value);
         }, $result));
+        $request->setPresenterName(str_replace($value, $module, $request->getPresenterName()));
+        return $module;
     }
 
     public function getMessages($locale)
@@ -103,72 +106,60 @@ final class Collection extends Application\Routers\RouteList
 
     public function translateOutModule($value, $request)
     {
+        $locale = $request->parameters['locale'];
         $parts = explode(':', strtolower($value));
         $base = [];
         $result = [];
         foreach ($parts as $part) {
-            $base[] = $part;
-            $moduleKey = implode('.', $base) . '.module';
-            $translated = $this->translator->translate($moduleKey);
+            $moduleKey = implode('.', array_merge($base, [$part])) . '.module';
+            $translated = $this->translator->translate($moduleKey, NULL, [], NULL, $locale);
             if ($moduleKey === $translated) {
                 $moduleKey = $part . '.module';
-                $translated = $this->translator->translate($moduleKey);
+                $translated = $this->translator->translate($moduleKey, NULL, [], NULL, $locale);
             }
             if ($translated !== $moduleKey) {
-                $result[] = Utils\Strings::webalize($translated);
+                $result[] = $this->filterTranslated($translated);
             } else {
                 $result[] = $part;
             }
+            $base[] = $part;
         }
         return implode('.', $result);
     }
 
-    public function translateIn($value)
+    private function filterTranslated($translated)
     {
-        if ($value['action'] === NULL) {
-            $value['action'] = 'view';
-            return $value;
-        }
-        $messages = $this->getMessages();
-        $actionKey = str_replace(':', '.', strtolower($value['module'] . ':' . $value['presenter'])) . '.action.';
-        $actions = array_filter(array_keys($messages), function ($key) use ($actionKey) {
-            return strpos($key, $actionKey) !== FALSE;
-        });
-        foreach ($actions as $key) {
-            if (Utils\Strings::webalize($messages[$key]) === $value['action']) {
-                $value['action'] = $key;
-                break;
-            }
-        }
-        $parts = explode('.', $value['action']);
-        $value['action'] = end($parts);
-        return $value;
-    }
-
-    public function translateOut($value)
-    {
-        if ($value['action'] === 'view') {
-            $value['action'] = NULL;
-            return $value;
-        }
-        $presenter = str_replace(':', '.', strtolower($value['presenter']));
-        $key = $presenter . '.action.' . $value['action'];
-        $translated = $this->translator->translate($key);
-        if ($translated !== $key) {
-            $value['action'] = Utils\Strings::webalize($translated);
-        } else {
-            $value['action'] = $key;
-        }
-        return $value;
+        return strtolower(str_replace(' ', '-', $translated));
     }
 
     public function translateInAction($action, $request)
     {
+        $messages = $this->getMessages($request->parameters['locale']);
+        $actionKey = str_replace(':', '.', strtolower($request->getPresenterName())) . '.action.';
+        $actions = array_filter(array_keys($messages), function ($key) use ($actionKey) {
+            return strpos($key, $actionKey) !== FALSE;
+        });
+        foreach ($actions as $key) {
+            if (Utils\Strings::webalize($messages[$key]) === Utils\Strings::webalize($action)) {
+                $action = $key;
+                break;
+            }
+        }
+        $parts = explode('.', $action);
+        $action = end($parts);
         return $action;
     }
 
     public function translateOutAction($action, $request)
     {
+        $presenter = str_replace(':', '.', strtolower($request->getPresenterName()));
+        $key = $presenter . '.action.' . $action;
+        $translated = $this->translator->translate($key, NULL, [], NULL, $request->parameters['locale']);
+        if ($translated !== $key) {
+            $action = $this->filterTranslated($translated);
+        } else {
+            $action = $key;
+        }
         return $action;
     }
 }

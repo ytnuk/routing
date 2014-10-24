@@ -2,16 +2,34 @@
 
 namespace WebEdit\Routing;
 
+use Nette;
 use Nette\Application;
 use Nette\Http;
-use Nette;
 
 final class Route extends Application\Routers\Route
 {
 
     const TRANSLATE = 'translate';
-    const WAY_IN = 'in';
-    const WAY_OUT = 'out';
+    const TRANSLATE_IN = 'translateIn';
+    const TRANSLATE_OUT = 'translateOut';
+    const TRANSLATE_PATTERN = '[a-z][a-z0-9.-áčďéěíňóřšťůúýžÁČĎÉĚÍŇÓŘŠŤŮÚÝŽ]*';
+
+    public static $styles = [
+        '#' => [
+            self::PATTERN => '[^/]+',
+            self::FILTER_IN => 'rawurldecode',
+            self::FILTER_OUT => [__CLASS__, 'param2path'],
+        ],
+        'module' => [
+            self::PATTERN => self::TRANSLATE_PATTERN,
+        ],
+        'presenter' => [
+            self::PATTERN => self::TRANSLATE_PATTERN,
+        ],
+        'action' => [
+            self::PATTERN => self::TRANSLATE_PATTERN,
+        ],
+    ];
 
     private $filters = [];
 
@@ -28,23 +46,30 @@ final class Route extends Application\Routers\Route
             return $appRequest;
         }
 
-        if ($params = $this->doFilterParams($this->getRequestParams($appRequest), $appRequest, self::WAY_IN)) {
+        if ($params = $this->doFilterParams($this->getRequestParams($appRequest), $appRequest, self::TRANSLATE_IN)) {
             return $this->setRequestParams($appRequest, $params);
         }
 
         return NULL;
     }
 
-    public function constructUrl(Application\Request $appRequest, Http\Url $refUrl)
+    private function doFilterParams($params, Application\Request $request, $way)
     {
-        if ($params = $this->doFilterParams($this->getRequestParams($appRequest), $appRequest, self::WAY_OUT)) {
-            $appRequest = $this->setRequestParams($appRequest, $params);
-            return parent::constructUrl($appRequest, $refUrl);
+        foreach ($this->filters as $param => $filters) {
+            if (!isset($params[$param]) || !isset($filters[$way])) {
+                continue;
+            }
+
+            if ($way === self::TRANSLATE_IN || $params[$param] !== $this->defaults[$param]) {
+                $params[$param] = call_user_func($filters[$way], (string)$params[$param], $request);
+            }
+            if ($params[$param] === NULL) {
+                return NULL;
+            }
         }
 
-        return NULL;
+        return $params;
     }
-
 
     private function getRequestParams(Application\Request $appRequest)
     {
@@ -99,23 +124,14 @@ final class Route extends Application\Routers\Route
         return $appRequest;
     }
 
-
-    private function doFilterParams($params, Application\Request $request, $way)
+    public function constructUrl(Application\Request $appRequest, Http\Url $refUrl)
     {
-        foreach ($this->filters as $param => $filters) {
-            if (!isset($params[$param]) || !isset($filters[$way])) {
-                continue;
-            }
-
-            if ($way === self::WAY_IN || $params[$param] !== $this->defaults[$param]) {
-                $params[$param] = call_user_func($filters[$way], (string)$params[$param], $request);
-            }
-            if ($params[$param] === NULL) {
-                return NULL;
-            }
+        if ($params = $this->doFilterParams($this->getRequestParams($appRequest), $appRequest, self::TRANSLATE_OUT)) {
+            $appRequest = $this->setRequestParams($appRequest, $params);
+            return parent::constructUrl($appRequest, $refUrl);
         }
 
-        return $params;
+        return NULL;
     }
 
 
