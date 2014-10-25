@@ -58,7 +58,7 @@ final class Collection extends Application\Routers\RouteList
         });
         $result = [];
         foreach (explode('.', $value) as $part) {
-            if (isset($messages[implode('.', array_merge($result, [$part])) . '.module'])) {
+            if (isset($messages[implode('.', array_merge($result, [$part, 'module']))])) {
                 $result[] = $part;
                 continue;
             }
@@ -111,10 +111,10 @@ final class Collection extends Application\Routers\RouteList
         $base = [];
         $result = [];
         foreach ($parts as $part) {
-            $moduleKey = implode('.', array_merge($base, [$part])) . '.module';
+            $moduleKey = implode('.', array_merge($base, [$part, 'module']));
             $translated = $this->translator->translate($moduleKey, NULL, [], NULL, $locale);
             if ($moduleKey === $translated) {
-                $moduleKey = $part . '.module';
+                $moduleKey = implode('.', [$part, 'module']);
                 $translated = $this->translator->translate($moduleKey, NULL, [], NULL, $locale);
             }
             if ($translated !== $moduleKey) {
@@ -135,7 +135,7 @@ final class Collection extends Application\Routers\RouteList
     public function translateInAction($action, $request)
     {
         $messages = $this->getMessages($request->parameters['locale']);
-        $actionKey = str_replace(':', '.', strtolower($request->getPresenterName())) . '.action.';
+        $actionKey = implode('.', array_merge(explode(':', strtolower($request->getPresenterName())), ['action']));
         $actions = array_filter(array_keys($messages), function ($key) use ($actionKey) {
             return strpos($key, $actionKey) !== FALSE;
         });
@@ -152,8 +152,7 @@ final class Collection extends Application\Routers\RouteList
 
     public function translateOutAction($action, $request)
     {
-        $presenter = str_replace(':', '.', strtolower($request->getPresenterName()));
-        $key = $presenter . '.action.' . $action;
+        $key = implode('.', array_merge(explode(':', strtolower($request->getPresenterName())), ['action', $action]));
         $translated = $this->translator->translate($key, NULL, [], NULL, $request->parameters['locale']);
         if ($translated !== $key) {
             $action = $this->filterTranslated($translated);
