@@ -129,7 +129,7 @@ final class Collection extends Application\Routers\RouteList
 
     private function filterTranslated($translated)
     {
-        return strtolower(str_replace(' ', '-', $translated));
+        return strtolower(str_replace(' ', '-', trim($translated)));
     }
 
     public function translateInAction($action, $request)

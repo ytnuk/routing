@@ -12,7 +12,7 @@ final class Route extends Application\Routers\Route
     const TRANSLATE = 'translate';
     const TRANSLATE_IN = 'translateIn';
     const TRANSLATE_OUT = 'translateOut';
-    const TRANSLATE_PATTERN = '[a-z0-9.áčďéěíňóřšťůúýžÁČĎÉĚÍŇÓŘŠŤŮÚÝŽ-]*';
+    const TRANSLATE_PATTERN = '[a-z.áčďéěíňóřšťůúýž-]*';
 
     public static $styles = [
         '#' => [
