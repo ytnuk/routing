@@ -9,25 +9,25 @@ use WebEdit\Routing;
 final class Extension extends Module\Extension implements Application\Provider
 {
 
-    public function getResources()
-    {
-        return [
-            'routes' => []
-        ];
-    }
+	public function getResources()
+	{
+		return [
+			'routes' => []
+		];
+	}
 
-    public function getApplicationResources()
-    {
-        return [
-            'services' => [
-                [
-                    'class' => Routing\Route\Collection::class,
-                    'setup' => [
-                        'addRoutes' => [$this['routes']]
-                    ]
-                ]
-            ]
-        ];
-    }
+	public function getApplicationResources()
+	{
+		return [
+			'services' => [
+				[
+					'class' => Routing\Route\Collection::class,
+					'setup' => [
+						'addRoutes' => [$this['routes']]
+					]
+				]
+			]
+		];
+	}
 
 }

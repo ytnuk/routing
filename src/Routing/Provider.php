@@ -5,5 +5,5 @@ namespace WebEdit\Routing;
 interface Provider
 {
 
-    public function getRoutingResources();
+	public function getRoutingResources();
 }
