@@ -8,19 +8,40 @@ use Nette\Http;
 use Nette\Utils;
 use WebEdit\Routing;
 
+/**
+ * Class Collection
+ *
+ * @package WebEdit\Routing
+ */
 final class Collection extends Application\Routers\RouteList
 {
 
+	/**
+	 * @var Translation\Translator
+	 */
 	private $translator;
+	/**
+	 * @var array
+	 */
 	private $messages = [];
+	/**
+	 * @var Http\Request
+	 */
 	private $request;
 
+	/**
+	 * @param Translation\Translator $translator
+	 * @param Http\Request $request
+	 */
 	public function __construct(Translation\Translator $translator, Http\Request $request)
 	{
 		$this->translator = $translator;
 		$this->request = $request;
 	}
 
+	/**
+	 * @param array $routes
+	 */
 	public function addRoutes(array $routes)
 	{
 		foreach ($routes as $mask => $metadata) {
@@ -28,6 +49,10 @@ final class Collection extends Application\Routers\RouteList
 		}
 	}
 
+	/**
+	 * @param string $mask
+	 * @param array|string $metadata
+	 */
 	public function addRoute($mask, $metadata)
 	{
 		if (is_array($metadata)) {
@@ -48,6 +73,11 @@ final class Collection extends Application\Routers\RouteList
 		$this[] = new Routing\Route($mask, $metadata);
 	}
 
+	/**
+	 * @param string $value
+	 * @param $request
+	 * @return string
+	 */
 	public function translateInModule($value, $request)
 	{
 		$messages = $this->getMessages($request->parameters['locale']);
@@ -78,6 +108,10 @@ final class Collection extends Application\Routers\RouteList
 		return $module;
 	}
 
+	/**
+	 * @param string $locale
+	 * @return array
+	 */
 	public function getMessages($locale)
 	{
 		if ( ! isset($this->messages[$locale])) {
@@ -87,7 +121,13 @@ final class Collection extends Application\Routers\RouteList
 		return $this->messages[$locale];
 	}
 
-	private function prepareValues($values, $separator = '->', $prefix = NULL)
+	/**
+	 * @param array $values
+	 * @param string $separator
+	 * @param NULL $prefix
+	 * @return array
+	 */
+	private function prepareValues(array $values, $separator = '->', $prefix = NULL)
 	{
 		$data = [];
 		foreach ($values as $key => $value) {
@@ -104,6 +144,11 @@ final class Collection extends Application\Routers\RouteList
 		return $data;
 	}
 
+	/**
+	 * @param string $value
+	 * @param $request
+	 * @return string
+	 */
 	public function translateOutModule($value, $request)
 	{
 		$locale = $request->parameters['locale'];
@@ -128,11 +173,20 @@ final class Collection extends Application\Routers\RouteList
 		return implode('.', $result);
 	}
 
+	/**
+	 * @param string $translated
+	 * @return string
+	 */
 	private function filterTranslated($translated)
 	{
 		return strtolower(str_replace(' ', '-', trim($translated)));
 	}
 
+	/**
+	 * @param string $action
+	 * @param $request
+	 * @return string
+	 */
 	public function translateInAction($action, $request)
 	{
 		$messages = $this->getMessages($request->parameters['locale']);
@@ -152,6 +206,11 @@ final class Collection extends Application\Routers\RouteList
 		return $action;
 	}
 
+	/**
+	 * @param string $action
+	 * @param $request
+	 * @return string
+	 */
 	public function translateOutAction($action, $request)
 	{
 		$key = implode('.', array_merge(explode(':', strtolower($request->getPresenterName())), ['action', $action]));

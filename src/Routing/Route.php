@@ -2,10 +2,14 @@
 
 namespace WebEdit\Routing;
 
-use Nette;
 use Nette\Application;
 use Nette\Http;
 
+/**
+ * Class Route
+ *
+ * @package WebEdit\Routing
+ */
 final class Route extends Application\Routers\Route
 {
 
@@ -13,15 +17,31 @@ final class Route extends Application\Routers\Route
 	const TRANSLATE_IN = 'translateIn';
 	const TRANSLATE_OUT = 'translateOut';
 	const TRANSLATE_PATTERN = '[a-z.áčďéěíňóřšťůúýž-]*';
+	/**
+	 * @var array
+	 */
 	public static $styles = ['#' => [self::PATTERN => '[^/]+', self::FILTER_IN => 'rawurldecode', self::FILTER_OUT => [__CLASS__, 'param2path'],], 'module' => [self::PATTERN => self::TRANSLATE_PATTERN,], 'presenter' => [self::PATTERN => self::TRANSLATE_PATTERN,], 'action' => [self::PATTERN => self::TRANSLATE_PATTERN,],];
+	/**
+	 * @var array
+	 */
 	private $filters = [];
 
+	/**
+	 * @param string $mask
+	 * @param array $metadata
+	 * @param int $flags
+	 */
 	public function __construct($mask, $metadata = [], $flags = 0)
 	{
 		$this->filters = $metadata;
 		parent::__construct($mask, $metadata, $flags);
 	}
 
+	/**
+	 * @param Http\IRequest $httpRequest
+	 * @return Application\Request|NULL
+	 * @throws \InvalidStateException
+	 */
 	public function match(Http\IRequest $httpRequest)
 	{
 		$appRequest = parent::match($httpRequest);
@@ -35,7 +55,13 @@ final class Route extends Application\Routers\Route
 		return NULL;
 	}
 
-	private function doFilterParams($params, Application\Request $request, $way)
+	/**
+	 * @param array $params
+	 * @param Application\Request $request
+	 * @param string $way
+	 * @return array|NULL
+	 */
+	private function doFilterParams(array $params, Application\Request $request, $way)
 	{
 		foreach ($this->filters as $param => $filters) {
 			if ( ! isset($params[$param]) || ! isset($filters[$way])) {
@@ -52,6 +78,10 @@ final class Route extends Application\Routers\Route
 		return $params;
 	}
 
+	/**
+	 * @param Application\Request $appRequest
+	 * @return array
+	 */
 	private function getRequestParams(Application\Request $appRequest)
 	{
 		$params = $appRequest->getParameters();
@@ -76,6 +106,12 @@ final class Route extends Application\Routers\Route
 		return $params;
 	}
 
+	/**
+	 * @param Application\Request $appRequest
+	 * @param array $params
+	 * @return Application\Request
+	 * @throws \InvalidStateException
+	 */
 	private function setRequestParams(Application\Request $appRequest, array $params)
 	{
 		$metadata = $this->getDefaults();
@@ -98,6 +134,12 @@ final class Route extends Application\Routers\Route
 		return $appRequest;
 	}
 
+	/**
+	 * @param Application\Request $appRequest
+	 * @param Http\Url $refUrl
+	 * @return NULL|string
+	 * @throws \InvalidStateException
+	 */
 	public function constructUrl(Application\Request $appRequest, Http\Url $refUrl)
 	{
 		if ($params = $this->doFilterParams($this->getRequestParams($appRequest), $appRequest, self::TRANSLATE_OUT)) {
