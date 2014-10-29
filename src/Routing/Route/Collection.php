@@ -32,10 +32,8 @@ final class Collection extends Application\Routers\RouteList
 	{
 		if (is_array($metadata)) {
 			foreach ($metadata as $column => &$data) {
-				if (!is_array($data)) {
-					$data = [
-						Routing\Route::VALUE => $data,
-					];
+				if ( ! is_array($data)) {
+					$data = [Routing\Route::VALUE => $data,];
 				}
 				$in = Routing\Route::TRANSLATE_IN . ucfirst($column);
 				if (method_exists($this, $in)) {
@@ -76,14 +74,16 @@ final class Collection extends Application\Routers\RouteList
 			return ucfirst($value);
 		}, $result));
 		$request->setPresenterName(str_replace($value, $module, $request->getPresenterName()));
+
 		return $module;
 	}
 
 	public function getMessages($locale)
 	{
-		if (!isset($this->messages[$locale])) {
+		if ( ! isset($this->messages[$locale])) {
 			$this->messages[$locale] = $this->prepareValues($this->translator->getMessages($locale), '.');
 		}
+
 		return $this->messages[$locale];
 	}
 
@@ -100,9 +100,9 @@ final class Collection extends Application\Routers\RouteList
 				$data[$key] = $value;
 			}
 		}
+
 		return $data;
 	}
-
 
 	public function translateOutModule($value, $request)
 	{
@@ -124,6 +124,7 @@ final class Collection extends Application\Routers\RouteList
 			}
 			$base[] = $part;
 		}
+
 		return implode('.', $result);
 	}
 
@@ -147,6 +148,7 @@ final class Collection extends Application\Routers\RouteList
 		}
 		$parts = explode('.', $action);
 		$action = end($parts);
+
 		return $action;
 	}
 
@@ -159,6 +161,7 @@ final class Collection extends Application\Routers\RouteList
 		} else {
 			$action = $key;
 		}
+
 		return $action;
 	}
 }
