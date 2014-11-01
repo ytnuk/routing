@@ -2,8 +2,8 @@
 
 namespace WebEdit\Routing;
 
-use WebEdit\Application;
-use WebEdit\Module;
+use Nette\DI;
+use WebEdit\Config;
 use WebEdit\Routing;
 
 /**
@@ -11,22 +11,33 @@ use WebEdit\Routing;
  *
  * @package WebEdit\Routing
  */
-final class Extension extends Module\Extension implements Application\Provider
+final class Extension extends DI\CompilerExtension implements Config\Provider
 {
 
 	/**
-	 * @return array
+	 * @var array
 	 */
-	public function getResources()
-	{
-		return ['routes' => []];
-	}
+	private $defaults = [
+		'routes' => []
+	];
 
 	/**
 	 * @return array
 	 */
-	public function getApplicationResources()
+	public function getConfigResources()
 	{
-		return ['services' => [['class' => Routing\Route\Collection::class, 'setup' => ['addRoutes' => [$this['routes']]]]]];
+		return [
+			'services' => [
+				'router' => Routing\Route\Collection::class,
+			]
+		];
+	}
+
+	public function beforeCompile()
+	{
+		$builder = $this->getContainerBuilder();
+		$config = $this->getConfig($this->defaults);
+		$builder->getDefinition('router')
+			->addSetup('addRoutes', [$config['routes']]);
 	}
 }

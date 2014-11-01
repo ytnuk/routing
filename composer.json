@@ -1,14 +1,7 @@
 {
 	"name": "webedit/routing",
-	"type": "webedit-module",
-	"extra": {
-		"extensions": {
-			"routing": "WebEdit\\Routing\\Extension"
-		}
-	},
 	"require": {
-		"webedit/module": "dev-master",
-		"webedit/application": "dev-master"
+		"nette/application": "dev-master"
 	},
 	"autoload": {
 		"psr-4": {

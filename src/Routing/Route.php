@@ -20,7 +20,19 @@ final class Route extends Application\Routers\Route
 	/**
 	 * @var array
 	 */
-	public static $styles = ['#' => [self::PATTERN => '[^/]+', self::FILTER_IN => 'rawurldecode', self::FILTER_OUT => [__CLASS__, 'param2path'],], 'module' => [self::PATTERN => self::TRANSLATE_PATTERN,], 'presenter' => [self::PATTERN => self::TRANSLATE_PATTERN,], 'action' => [self::PATTERN => self::TRANSLATE_PATTERN,],];
+	public static $styles = [
+		'#' => [
+			self::PATTERN => '[^/]+',
+			self::FILTER_IN => 'rawurldecode',
+			self::FILTER_OUT => [
+				__CLASS__,
+				'param2path'
+			],
+		],
+		'module' => [self::PATTERN => self::TRANSLATE_PATTERN,],
+		'presenter' => [self::PATTERN => self::TRANSLATE_PATTERN,],
+		'action' => [self::PATTERN => self::TRANSLATE_PATTERN,],
+	];
 	/**
 	 * @var array
 	 */
