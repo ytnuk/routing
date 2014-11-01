@@ -4,6 +4,7 @@ namespace WebEdit\Routing;
 
 use Nette\Application;
 use Nette\Http;
+use Nette\InvalidStateException;
 
 /**
  * Class Route
@@ -17,6 +18,7 @@ final class Route extends Application\Routers\Route
 	const TRANSLATE_IN = 'translateIn';
 	const TRANSLATE_OUT = 'translateOut';
 	const TRANSLATE_PATTERN = '[a-z.áčďéěíňóřšťůúýž-]*';
+
 	/**
 	 * @var array
 	 */
@@ -33,6 +35,7 @@ final class Route extends Application\Routers\Route
 		'presenter' => [self::PATTERN => self::TRANSLATE_PATTERN,],
 		'action' => [self::PATTERN => self::TRANSLATE_PATTERN,],
 	];
+
 	/**
 	 * @var array
 	 */
@@ -51,8 +54,9 @@ final class Route extends Application\Routers\Route
 
 	/**
 	 * @param Http\IRequest $httpRequest
+	 *
 	 * @return Application\Request|NULL
-	 * @throws \InvalidStateException
+	 * @throws InvalidStateException
 	 */
 	public function match(Http\IRequest $httpRequest)
 	{
@@ -71,6 +75,7 @@ final class Route extends Application\Routers\Route
 	 * @param array $params
 	 * @param Application\Request $request
 	 * @param string $way
+	 *
 	 * @return array|NULL
 	 */
 	private function doFilterParams(array $params, Application\Request $request, $way)
@@ -92,6 +97,7 @@ final class Route extends Application\Routers\Route
 
 	/**
 	 * @param Application\Request $appRequest
+	 *
 	 * @return array
 	 */
 	private function getRequestParams(Application\Request $appRequest)
@@ -100,7 +106,7 @@ final class Route extends Application\Routers\Route
 		$metadata = $this->getDefaults();
 		$presenter = $appRequest->getPresenterName();
 		$params[self::PRESENTER_KEY] = $presenter;
-		if (isset($metadata[self::MODULE_KEY])) { // try split into module and [submodule:]presenter parts
+		if (isset($metadata[self::MODULE_KEY])) {
 			$module = $metadata[self::MODULE_KEY];
 			if (isset($module['fixity']) && strncasecmp($presenter, $module[self::VALUE] . ':', strlen($module[self::VALUE]) + 1) === 0) {
 				$a = strlen($module[self::VALUE]);
@@ -121,18 +127,19 @@ final class Route extends Application\Routers\Route
 	/**
 	 * @param Application\Request $appRequest
 	 * @param array $params
+	 *
 	 * @return Application\Request
-	 * @throws \InvalidStateException
+	 * @throws InvalidStateException
 	 */
 	private function setRequestParams(Application\Request $appRequest, array $params)
 	{
 		$metadata = $this->getDefaults();
 		if ( ! isset($params[self::PRESENTER_KEY])) {
-			throw new \InvalidStateException('Missing presenter in route definition.');
+			throw new InvalidStateException('Missing presenter in route definition.');
 		}
 		if (isset($metadata[self::MODULE_KEY])) {
 			if ( ! isset($params[self::MODULE_KEY])) {
-				throw new \InvalidStateException('Missing module in route definition.');
+				throw new InvalidStateException('Missing module in route definition.');
 			}
 			$presenter = $params[self::MODULE_KEY] . ':' . $params[self::PRESENTER_KEY];
 			unset($params[self::MODULE_KEY], $params[self::PRESENTER_KEY]);
@@ -149,8 +156,9 @@ final class Route extends Application\Routers\Route
 	/**
 	 * @param Application\Request $appRequest
 	 * @param Http\Url $refUrl
+	 *
 	 * @return NULL|string
-	 * @throws \InvalidStateException
+	 * @throws InvalidStateException
 	 */
 	public function constructUrl(Application\Request $appRequest, Http\Url $refUrl)
 	{

@@ -20,10 +20,12 @@ final class Collection extends Application\Routers\RouteList
 	 * @var Translation\Translator
 	 */
 	private $translator;
+
 	/**
 	 * @var array
 	 */
 	private $messages = [];
+
 	/**
 	 * @var Http\Request
 	 */
@@ -82,6 +84,7 @@ final class Collection extends Application\Routers\RouteList
 	/**
 	 * @param string $value
 	 * @param $request
+	 *
 	 * @return string
 	 */
 	public function translateInModule($value, $request)
@@ -119,6 +122,7 @@ final class Collection extends Application\Routers\RouteList
 
 	/**
 	 * @param string $locale
+	 *
 	 * @return array
 	 */
 	public function getMessages($locale)
@@ -134,6 +138,7 @@ final class Collection extends Application\Routers\RouteList
 	 * @param array $values
 	 * @param string $separator
 	 * @param NULL $prefix
+	 *
 	 * @return array
 	 */
 	private function prepareValues(array $values, $separator = '->', $prefix = NULL)
@@ -156,6 +161,7 @@ final class Collection extends Application\Routers\RouteList
 	/**
 	 * @param string $value
 	 * @param $request
+	 *
 	 * @return string
 	 */
 	public function translateOutModule($value, $request)
@@ -190,6 +196,7 @@ final class Collection extends Application\Routers\RouteList
 
 	/**
 	 * @param string $translated
+	 *
 	 * @return string
 	 */
 	private function filterTranslated($translated)
@@ -200,6 +207,7 @@ final class Collection extends Application\Routers\RouteList
 	/**
 	 * @param string $action
 	 * @param $request
+	 *
 	 * @return string
 	 */
 	public function translateInAction($action, $request)
@@ -224,6 +232,7 @@ final class Collection extends Application\Routers\RouteList
 	/**
 	 * @param string $action
 	 * @param $request
+	 *
 	 * @return string
 	 */
 	public function translateOutAction($action, $request)
