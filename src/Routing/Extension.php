@@ -2,8 +2,6 @@
 
 namespace WebEdit\Routing;
 
-use Nette\Application;
-use Nette\Bridges;
 use Nette\DI;
 
 /**
@@ -11,35 +9,19 @@ use Nette\DI;
  *
  * @package WebEdit\Routing
  */
-final class Extension extends Bridges\ApplicationDI\RoutingExtension
+final class Extension extends DI\CompilerExtension
 {
 
-	/**
-	 * @var bool
-	 */
-	private $debugMode;
+	private $defaults = [
+		'routes' => []
+	];
 
-	/**
-	 * @param bool $debugMode
-	 */
-	public function __construct($debugMode = FALSE)
+	public function beforeCompile()
 	{
-		$this->debugMode = $debugMode;
-	}
-
-	public function loadConfiguration()
-	{
-		$container = $this->getContainerBuilder();
 		$config = $this->getConfig($this->defaults);
-		$container->addDefinition('router')
-			->setClass(Application\IRouter::class)
+		$this->getContainerBuilder()
+			->getDefinition('router')
 			->setFactory(Route\Collection::class)
 			->addSetup('addRoutes', [$config['routes']]);
-		if ($this->debugMode && $config['debugger']) {
-			$container->getDefinition('application')
-				->addSetup('@Tracy\Bar::addPanel', [
-					new DI\Statement(Bridges\ApplicationTracy\RoutingPanel::class)
-				]);
-		}
 	}
 }
