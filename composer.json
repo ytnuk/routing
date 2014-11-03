@@ -1,7 +1,8 @@
 {
 	"name": "webedit/routing",
 	"require": {
-		"nette/application": "dev-master"
+		"nette/application": "dev-master",
+		"nette/di": "dev-master"
 	},
 	"autoload": {
 		"psr-4": {
