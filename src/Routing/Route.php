@@ -80,12 +80,16 @@ final class Route extends Application\Routers\Route
 	 */
 	private function doFilterParams(array $params, Application\Request $request, $way)
 	{
+		$module = isset($params['module']) ? $params['module'] : NULL;
 		foreach ($this->filters as $param => $filters) {
 			if ( ! isset($params[$param]) || ! isset($filters[$way])) {
 				continue;
 			}
 			if ($way === self::TRANSLATE_IN || $params[$param] !== $this->defaults[$param]) {
-				$params[$param] = call_user_func($filters[$way], (string) $params[$param], $request);
+				$params[$param] = call_user_func($filters[$way], (string) $params[$param], $request, $param);
+				if($param === 'module' && $way === self::TRANSLATE_IN) {
+					$request->setPresenterName(str_replace($module, $params[$param], $request->getPresenterName()));
+				}
 			}
 			if ($params[$param] === NULL) {
 				return NULL;

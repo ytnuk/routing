@@ -62,14 +62,11 @@ final class Collection extends Application\Routers\RouteList
 				if ( ! is_array($data)) {
 					$data = [Routing\Route::VALUE => $data,];
 				}
-				$in = Routing\Route::TRANSLATE_IN . ucfirst($column);
-				if (method_exists($this, $in)) {
-					$data[Routing\Route::TRANSLATE_IN] = [
-						$this,
-						$in
-					];
-				}
-				$out = Routing\Route::TRANSLATE_OUT . ucfirst($column);
+				$data[Routing\Route::TRANSLATE_IN] = [
+					$this,
+					'translateIn'
+				];
+				$out = Routing\Route::TRANSLATE_OUT . ucfirst($column); //TODO: unify translate out methods
 				if (method_exists($this, $out)) {
 					$data[Routing\Route::TRANSLATE_OUT] = [
 						$this,
@@ -84,40 +81,42 @@ final class Collection extends Application\Routers\RouteList
 	/**
 	 * @param string $value
 	 * @param $request
+	 * @param string $type
 	 *
 	 * @return string
 	 */
-	public function translateInModule($value, $request)
+	public function translateIn($value, $request, $type)
 	{
 		$messages = $this->getMessages($request->parameters['locale']);
-		$modulesKeys = array_filter(array_keys($messages), function ($key) {
-			return strpos($key, '.module') === strlen($key) - strlen('.module');
-		});
-		$result = [];
-		foreach (explode('.', $value) as $part) {
-			if (isset($messages[implode('.', array_merge($result, [
-					$part,
-					'module'
-				]))])) {
-				$result[] = $part;
-				continue;
-			}
-			foreach ($modulesKeys as $key) {
-				if (Utils\Strings::webalize($messages[$key]) === Utils\Strings::webalize($part)) {
-					$part = explode('.', $key);
-					array_pop($part);
-					$part = end($part);
-					break;
-				}
-			}
-			$result[] = $part;
+		if ($type === 'module') {
+			$presenterKey = '.presenter';
+		} else {
+			$presenterKey = str_replace(':', '.', strtolower($request->getPresenterName()));
 		}
-		$module = implode(':', array_map(function ($value) {
-			return ucfirst($value);
-		}, $result));
-		$request->setPresenterName(str_replace($value, $module, $request->getPresenterName()));
+		$messageKeys = array_filter(array_keys($messages), function ($messageKey) use ($presenterKey, $type) {
+			return strpos($messageKey, $presenterKey . '.' . $type) !== FALSE;
+		});
+		$translated = $value;
+		foreach ($messageKeys as $messageKey) {
+			if (Utils\Strings::webalize($messages[$messageKey]) === Utils\Strings::webalize($value)) {
+				$translated = $messageKey;
+				break;
+			}
+		}
+		if ($value === $translated) {
+			return str_replace('.', ':', $value);
+		}
+		if ($result = substr($translated, 0, strpos($translated, $presenterKey . '.' . $type))) {
+			$parts = explode('.', $result);
 
-		return $module;
+			return implode(':', array_map(function ($part) {
+				return ucfirst($part);
+			}, $parts));
+		} else {
+			$parts = explode('.', $translated);
+
+			return end($parts);
+		}
 	}
 
 	/**
@@ -161,37 +160,26 @@ final class Collection extends Application\Routers\RouteList
 	/**
 	 * @param string $value
 	 * @param $request
+	 * @param string $type
 	 *
 	 * @return string
 	 */
-	public function translateOutModule($value, $request)
+	public function translateOutModule($value, $request, $type)
 	{
-		$locale = $request->parameters['locale'];
-		$parts = explode(':', strtolower($value));
-		$base = [];
-		$result = [];
-		foreach ($parts as $part) {
-			$moduleKey = implode('.', array_merge($base, [
-				$part,
-				'module'
+		$key = implode('.', array_merge(explode(':', strtolower($request->getPresenterName())), [
+			$type,
+			$value
+		]));
+		$translated = $this->translator->translate($key, NULL, [], NULL, $request->parameters['locale']);
+		if ($translated === $key) {
+			$key = implode('.', array_merge(explode(':', strtolower($request->getPresenterName())), [
+				$type
 			]));
-			$translated = $this->translator->translate($moduleKey, NULL, [], NULL, $locale);
-			if ($moduleKey === $translated) {
-				$moduleKey = implode('.', [
-					$part,
-					'module'
-				]);
-				$translated = $this->translator->translate($moduleKey, NULL, [], NULL, $locale);
-			}
-			if ($translated !== $moduleKey) {
-				$result[] = $this->filterTranslated($translated);
-			} else {
-				$result[] = $part;
-			}
-			$base[] = $part;
+			$translated = $this->translator->translate($key, NULL, [], NULL, $request->parameters['locale']);
 		}
+		$parts = explode('.', $key);
 
-		return implode('.', $result);
+		return $translated === $key ? str_replace(':', '.', end($parts)) : $this->filterTranslated($translated);
 	}
 
 	/**
@@ -205,49 +193,19 @@ final class Collection extends Application\Routers\RouteList
 	}
 
 	/**
-	 * @param string $action
+	 * @param string $value
 	 * @param $request
 	 *
 	 * @return string
 	 */
-	public function translateInAction($action, $request)
-	{
-		$messages = $this->getMessages($request->parameters['locale']);
-		$actionKey = implode('.', array_merge(explode(':', strtolower($request->getPresenterName())), ['action']));
-		$actions = array_filter(array_keys($messages), function ($key) use ($actionKey) {
-			return strpos($key, $actionKey) !== FALSE;
-		});
-		foreach ($actions as $key) {
-			if (Utils\Strings::webalize($messages[$key]) === Utils\Strings::webalize($action)) {
-				$action = $key;
-				break;
-			}
-		}
-		$parts = explode('.', $action);
-		$action = end($parts);
-
-		return $action;
-	}
-
-	/**
-	 * @param string $action
-	 * @param $request
-	 *
-	 * @return string
-	 */
-	public function translateOutAction($action, $request)
+	public function translateOutAction($value, $request)
 	{
 		$key = implode('.', array_merge(explode(':', strtolower($request->getPresenterName())), [
 			'action',
-			$action
+			$value
 		]));
 		$translated = $this->translator->translate($key, NULL, [], NULL, $request->parameters['locale']);
-		if ($translated !== $key) {
-			$action = $this->filterTranslated($translated);
-		} else {
-			$action = $key;
-		}
 
-		return $action;
+		return $translated === $key ? $key : $this->filterTranslated($translated);
 	}
 }

@@ -14,21 +14,12 @@ use Nette\DI;
 final class Extension extends Bridges\ApplicationDI\RoutingExtension
 {
 
-	public function beforeCompile()
-	{
-		$config = $this->getConfig($this->defaults);
-		if ($config['debugger']) {
-			$this->getContainerBuilder()
-				->getDefinition('application')
-				->addSetup('@Tracy\Bar::addPanel', [
-					new DI\Statement(Bridges\ApplicationTracy\RoutingPanel::class)
-				]);
-		}
-	}
-
 	public function loadConfiguration()
 	{
+		parent::loadConfiguration();
 		$config = $this->getConfig($this->defaults);
+		$this->getContainerBuilder()
+			->removeDefinition('router');
 		$this->getContainerBuilder()
 			->addDefinition('router')
 			->setClass('Nette\Application\IRouter')
