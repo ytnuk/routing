@@ -87,7 +87,7 @@ final class Route extends Application\Routers\Route
 			}
 			if ($way === self::TRANSLATE_IN || $params[$param] !== $this->defaults[$param]) {
 				$params[$param] = call_user_func($filters[$way], (string) $params[$param], $request, $param);
-				if($param === 'module' && $way === self::TRANSLATE_IN) {
+				if ($param === 'module' && $way === self::TRANSLATE_IN) {
 					$request->setPresenterName(str_replace($module, $params[$param], $request->getPresenterName()));
 				}
 			}
